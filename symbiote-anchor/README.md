@@ -3,14 +3,14 @@
 ## Build
 
 ```bash
-cd /Users/defiduke/Documents/New\ project/symbiote-anchor
+# from root/symbiote-anchor
 anchor build
 ```
 
 ## Test (local validator)
 
 ```bash
-cd /Users/defiduke/Documents/New\ project/symbiote-anchor
+# from root/symbiote-anchor
 yarn
 anchor test
 ```
@@ -18,7 +18,7 @@ anchor test
 ## Deploy (dev pipeline)
 
 ```bash
-cd /Users/defiduke/Documents/New\ project/symbiote-anchor
+# from root/symbiote-anchor
 ./scripts/deploy-dev.sh
 ```
 

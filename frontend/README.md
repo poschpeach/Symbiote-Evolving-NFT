@@ -5,7 +5,7 @@
 1. Start backend:
 
 ```bash
-cd /Users/defiduke/Documents/New\ project/backend
+# from root/backend
 npm install
 npm run start
 ```
@@ -13,7 +13,7 @@ npm run start
 2. Serve frontend as static files:
 
 ```bash
-cd /Users/defiduke/Documents/New\ project
+# from root
 python3 -m http.server 5173 --directory frontend
 ```
 
@@ -24,7 +24,7 @@ python3 -m http.server 5173 --directory frontend
 Or run both backend + frontend from workspace root:
 
 ```bash
-cd /Users/defiduke/Documents/New\ project
+# from root
 ./scripts/preflight.sh
 ./scripts/dev-up.sh
 ```

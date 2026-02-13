@@ -64,7 +64,7 @@ Key file:
 ## 2) Local Start
 
 ```bash
-cd /Users/defiduke/Documents/New\ project
+# From project root
 ./scripts/dev-up.sh
 ```
 
