@@ -1,12 +1,16 @@
 # Symbiote Pet Dynamic Evolutionary NFT
 
-Autonomous Solana NFT game agent that:
-- mints a mutable Metaplex NFT,
-- learns wallet behavior from on-chain activity,
-- plays agentic strategy turns for the user (manual + auto-play),
-- plans multi-domain autonomous actions (portfolio, yield, governance, game missions),
-- suggests Jupiter swaps with referral fee routing,
-- and evolves NFT state (Level / XP / Personality) after executed trades.
+Symbiote is an autonomous on-chain companion, represented as a mutable Metaplex NFT.
+
+It is not just a trade suggester. It is an agentic system that:
+- mints and maintains a living NFT identity on Solana,
+- learns a user profile from wallet behavior and historical actions,
+- runs a persistent mission/game loop (manual turns + auto-play),
+- plans cross-domain actions (trading, yield posture, risk recovery, governance-style objectives),
+- prepares Jupiter-routed transactions with referral routing for execution,
+- and evolves its on-chain state (`Level`, `XP`, `Personality`) after verified outcomes.
+
+The result is a programmable “pet strategist” that behaves like a game character + financial operator, with state anchored on-chain.
 
 ## Project Structure
 
@@ -41,10 +45,11 @@ cd /Users/defiduke/Documents/New\ project
 
 1. Connect Phantom (signed auth challenge)
 2. Mint Symbiote NFT
-3. Generate AI trade suggestion
-4. Sign Jupiter swap transaction
-5. Confirm trade and evolve NFT on-chain
-6. Watch live state updates via `/symbiote/:mint`
+3. Create a mission and run agent turns (`/agent/create-mission`, `/agent/play-turn`)
+4. Generate broader autonomous action plan (`/agent/next-actions`)
+5. Sign Jupiter transaction when the agent proposes an executable move
+6. Confirm outcome and evolve NFT on-chain (`/confirm-trade`)
+7. Inspect unified live dashboard (`/agent/dashboard/:walletAddress`)
 
 ## Readiness
 
