@@ -1,9 +1,34 @@
-/target
-/backend/.env
-/backend/symbiote.db
-/backend/node_modules
-/backend/keypairs
-/frontend/node_modules
-/symbiote-anchor/node_modules
-/.logs
-/backend/logs
+# System / OS
+.DS_Store
+Thumbs.db
+
+# Build Artifacts
+**/target/
+**/dist/
+**/build/
+.next/
+out/
+
+# Dependencies
+**/node_modules/
+
+# Local Config and Secrets
+.env
+.env.local
+.env.*
+backend/.env
+backend/keypairs/
+backend/symbiote.db
+
+# Logs
+**/logs/
+.logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Other
+.idea/
+.vscode/
+
