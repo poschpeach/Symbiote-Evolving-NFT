@@ -64,7 +64,7 @@ Key file:
 ## 2) Local Start
 
 ```bash
-# From project root
+cd /Users/hurricanexbt/Documents/New\ project
 ./scripts/dev-up.sh
 ```
 

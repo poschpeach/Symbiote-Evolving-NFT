@@ -24,7 +24,7 @@ The result is a programmable “pet strategist” that behaves like a game chara
 1. Configure backend environment:
 
 ```bash
-cd backend
+cd /Users/hurricanexbt/Documents/New\ project/backend
 cp .env.example .env
 npm install
 npm run validate:env
@@ -33,8 +33,7 @@ npm run validate:env
 2. Launch backend + frontend:
 
 ```bash
-# return to root if you are in /backend
-cd ..
+cd /Users/hurricanexbt/Documents/New\ project
 ./scripts/dev-up.sh
 ```
 
