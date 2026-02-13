@@ -1,8 +1,6 @@
-# Symbiote Pet Dynamic Evolutionary NFT
+Symbiote is a dynamic evolutionary NFT and autonomous on-chain companion. It acts as a "pet strategist," learning your wallet behavior to plan financial actions and route Jupiter trades. After every verified outcome, it autonomously evolves its Level, XP, and Personality. A living game character and financial operator on Solana.
 
-Symbiote is an autonomous on-chain companion, represented as a mutable Metaplex NFT.
-
-It is not just a trade suggester. It is an agentic system that:
+The system:
 - mints and maintains a living NFT identity on Solana,
 - learns a user profile from wallet behavior and historical actions,
 - runs a persistent mission/game loop (manual turns + auto-play),
@@ -11,6 +9,7 @@ It is not just a trade suggester. It is an agentic system that:
 - and evolves its on-chain state (`Level`, `XP`, `Personality`) after verified outcomes.
 
 The result is a programmable “pet strategist” that behaves like a game character + financial operator, with state anchored on-chain.
+
 
 ## Project Structure
 
