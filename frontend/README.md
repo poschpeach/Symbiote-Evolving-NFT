@@ -25,6 +25,7 @@ Or run both backend + frontend from workspace root:
 
 ```bash
 cd /Users/defiduke/Documents/New\ project
+./scripts/preflight.sh
 ./scripts/dev-up.sh
 ```
 
@@ -33,7 +34,9 @@ cd /Users/defiduke/Documents/New\ project
 1. Connect Phantom (includes auth challenge + signed verification)
 2. Connect wallet session to backend
 3. Mint Symbiote NFT
-4. Request AI trade suggestion + Jupiter routed transaction
-5. Sign and send transaction in Phantom
-6. Backend confirms trade and calls `evolve_symbiote`
-7. Frontend auto-refreshes `/symbiote/:mint` every 10s
+4. Play autonomous game turn (`/agent/play-turn`)
+5. Optionally toggle auto-play (`/agent/auto-play`)
+6. Request AI trade suggestion + Jupiter routed transaction
+7. Sign and send transaction in Phantom
+8. Backend confirms trade and calls `evolve_symbiote`
+9. Frontend auto-refreshes `/symbiote/:mint` and `/agent/state/:wallet` every 10s

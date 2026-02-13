@@ -53,6 +53,7 @@ const USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
 const CHALLENGE_TTL_MS = Number(process.env.AUTH_CHALLENGE_TTL_MS || 5 * 60 * 1000);
 const SESSION_TTL_MS = Number(process.env.AUTH_SESSION_TTL_MS || 24 * 60 * 60 * 1000);
 const MIN_CONFIRM_VOLUME_USD = Number(process.env.MIN_CONFIRM_VOLUME_USD || 1);
+const DEFAULT_GAME_TICK_SEC = Number(process.env.GAME_TICK_SEC || 300);
 
 if (!RPC_URL) throw new Error("Missing SOLANA_RPC_URL in environment.");
 if (!process.env.OPENAI_API_KEY) throw new Error("Missing OPENAI_API_KEY in environment.");
@@ -78,6 +79,7 @@ const idl = JSON.parse(fs.readFileSync(idlAbsolutePath, "utf8"));
 idl.address = PROGRAM_ID.toBase58();
 const program = new Program(idl, provider);
 const activeSubscriptions = new Map();
+const activeGameLoops = new Map();
 
 const authLimiter = rateLimit({
   windowMs: 60_000,
@@ -198,6 +200,8 @@ app.post("/connect-wallet", requireSession, async (req, res) => {
     if (symbioteMint) new PublicKey(symbioteMint);
 
     upsertUser(db, walletPk.toBase58(), symbioteMint || null);
+    upsertGameProfile(db, walletPk.toBase58());
+    configureAutoPlay(walletPk.toBase58());
     subscribeWallet(walletPk);
     res.json({
       status: "connected",
@@ -289,6 +293,68 @@ app.post("/suggest-trade", requireSession, async (req, res) => {
       jupiterQuote: swapPlan.quote,
       readyToSignSwapTransaction: swapPlan.swapTransactionBase64,
       referralFeeAccount: JUPITER_REFERRAL_FEE_ACCOUNT,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post("/agent/play-turn", requireSession, async (req, res) => {
+  try {
+    const { walletAddress } = req.body;
+    if (!walletAddress) return res.status(400).json({ error: "walletAddress is required" });
+    requireWalletMatch(req.auth.walletAddress, walletAddress);
+
+    const turn = await runGameTurn(walletAddress, true);
+    res.json(turn);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get("/agent/state/:walletAddress", requireSession, async (req, res) => {
+  try {
+    const walletAddress = req.params.walletAddress;
+    requireWalletMatch(req.auth.walletAddress, walletAddress);
+
+    const profile = getGameProfile(db, walletAddress);
+    const recentActions = getRecentGameActions(db, walletAddress, 12);
+    const user = getUser(db, walletAddress);
+    const symbiote = user?.symbiote_mint ? await fetchSymbioteState(user.symbiote_mint) : null;
+
+    res.json({
+      walletAddress,
+      profile: profile || null,
+      symbiote,
+      recentActions,
+      autoPlayActive: activeGameLoops.has(walletAddress),
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post("/agent/auto-play", requireSession, async (req, res) => {
+  try {
+    const { walletAddress, enabled, intervalSec } = req.body;
+    if (!walletAddress || typeof enabled !== "boolean") {
+      return res.status(400).json({ error: "walletAddress and enabled are required." });
+    }
+    requireWalletMatch(req.auth.walletAddress, walletAddress);
+
+    const safeInterval = Math.max(60, Number(intervalSec || DEFAULT_GAME_TICK_SEC));
+    upsertGameProfile(db, walletAddress, {
+      mode: "Agentic",
+      autoPlay: enabled ? 1 : 0,
+      tickIntervalSec: safeInterval,
+    });
+    configureAutoPlay(walletAddress);
+
+    res.json({
+      walletAddress,
+      enabled,
+      intervalSec: safeInterval,
+      autoPlayActive: activeGameLoops.has(walletAddress),
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -420,6 +486,29 @@ function initDb(database) {
       expires_at TEXT NOT NULL,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP
     );
+
+    CREATE TABLE IF NOT EXISTS game_profiles (
+      wallet_address TEXT PRIMARY KEY,
+      mode TEXT NOT NULL DEFAULT 'Agentic',
+      archetype TEXT NOT NULL DEFAULT 'Explorer',
+      streak INTEGER NOT NULL DEFAULT 0,
+      energy INTEGER NOT NULL DEFAULT 100,
+      auto_play INTEGER NOT NULL DEFAULT 0,
+      tick_interval_sec INTEGER NOT NULL DEFAULT 300,
+      updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS game_actions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      wallet_address TEXT NOT NULL,
+      symbiote_mint TEXT,
+      game_name TEXT NOT NULL,
+      objective TEXT NOT NULL,
+      move_text TEXT NOT NULL,
+      outcome_text TEXT NOT NULL,
+      tx_base64 TEXT,
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    );
   `);
 }
 
@@ -545,6 +634,68 @@ function saveTrade(database, walletAddress, signature, volumeUsd, personality) {
     .run(walletAddress, signature, volumeUsd, personality);
 }
 
+function getGameProfile(database, walletAddress) {
+  return database.prepare(`SELECT * FROM game_profiles WHERE wallet_address = ?`).get(walletAddress);
+}
+
+function upsertGameProfile(database, walletAddress, patch = {}) {
+  const current = getGameProfile(database, walletAddress) || {
+    mode: "Agentic",
+    archetype: "Explorer",
+    streak: 0,
+    energy: 100,
+    auto_play: 0,
+    tick_interval_sec: DEFAULT_GAME_TICK_SEC,
+  };
+  database
+    .prepare(
+      `INSERT INTO game_profiles (wallet_address, mode, archetype, streak, energy, auto_play, tick_interval_sec, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+       ON CONFLICT(wallet_address) DO UPDATE SET
+         mode = excluded.mode,
+         archetype = excluded.archetype,
+         streak = excluded.streak,
+         energy = excluded.energy,
+         auto_play = excluded.auto_play,
+         tick_interval_sec = excluded.tick_interval_sec,
+         updated_at = excluded.updated_at`
+    )
+    .run(
+      walletAddress,
+      patch.mode ?? current.mode,
+      patch.archetype ?? current.archetype,
+      patch.streak ?? current.streak,
+      patch.energy ?? current.energy,
+      patch.autoPlay ?? current.auto_play,
+      patch.tickIntervalSec ?? current.tick_interval_sec,
+      new Date().toISOString()
+    );
+  return getGameProfile(database, walletAddress);
+}
+
+function saveGameAction(database, walletAddress, action) {
+  database
+    .prepare(
+      `INSERT INTO game_actions (wallet_address, symbiote_mint, game_name, objective, move_text, outcome_text, tx_base64)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`
+    )
+    .run(
+      walletAddress,
+      action.symbioteMint || null,
+      action.gameName || "Symbiote Arena",
+      action.objective || "Survive market volatility",
+      action.moveText || "Hold formation.",
+      action.outcomeText || "No major state change.",
+      action.txBase64 || null
+    );
+}
+
+function getRecentGameActions(database, walletAddress, limit = 20) {
+  return database
+    .prepare(`SELECT * FROM game_actions WHERE wallet_address = ? ORDER BY id DESC LIMIT ?`)
+    .all(walletAddress, limit);
+}
+
 function subscribeWallet(walletPk) {
   const walletAddress = walletPk.toBase58();
   if (activeSubscriptions.has(walletAddress)) return;
@@ -632,6 +783,121 @@ USDC ${USDC_MINT}
       amount_lamports_or_units: String(parsed.recommendation?.amount_lamports_or_units || "10000000"),
     },
   };
+}
+
+async function inferGameTurn(walletAddress, symbiote, history, memory) {
+  const systemPrompt = `
+You are a game master for an autonomous on-chain companion.
+Create one turn for a persistent game where the Symbiote plays for its owner.
+Return strict JSON:
+{
+  "game_name": "string",
+  "objective": "string",
+  "move_text": "string",
+  "outcome_text": "string",
+  "archetype": "string",
+  "requires_trade": true|false,
+  "trade": {
+    "text": "string",
+    "input_mint": "mint address",
+    "output_mint": "mint address",
+    "amount_lamports_or_units": "integer string amount"
+  }
+}
+Use SOL mint ${SOL_MINT}
+Use USDC mint ${USDC_MINT}
+`;
+
+  const response = await openai.responses.create({
+    model: OPENAI_MODEL,
+    input: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: JSON.stringify({ walletAddress, symbiote, history, memory }) },
+    ],
+    temperature: 0.6,
+  });
+
+  const parsed = safeJsonParse(response.output_text || "{}");
+  return {
+    gameName: parsed.game_name || "Symbiote Arena",
+    objective: parsed.objective || "Preserve energy while compounding XP.",
+    moveText: parsed.move_text || "The Symbiote scouts liquidity corridors.",
+    outcomeText: parsed.outcome_text || "No catastrophic encounter this round.",
+    archetype: parsed.archetype || "Explorer",
+    requiresTrade: Boolean(parsed.requires_trade),
+    trade: {
+      text: parsed.trade?.text || "Rotate some risk into SOL.",
+      input_mint: parsed.trade?.input_mint || SOL_MINT,
+      output_mint: parsed.trade?.output_mint || USDC_MINT,
+      amount_lamports_or_units: String(parsed.trade?.amount_lamports_or_units || "10000000"),
+    },
+  };
+}
+
+async function runGameTurn(walletAddress, allowSwapBuild = true) {
+  const user = getUser(db, walletAddress);
+  if (!user || !user.symbiote_mint) {
+    throw new Error("Wallet is not connected to a symbiote mint.");
+  }
+
+  const history = await fetchTradeHistory(walletAddress, 20);
+  const memory = getMemory(db, walletAddress, 20);
+  const symbiote = await fetchSymbioteState(user.symbiote_mint);
+  const turn = await inferGameTurn(walletAddress, symbiote, history, memory);
+
+  let swapPlan = null;
+  if (allowSwapBuild && turn.requiresTrade) {
+    swapPlan = await buildSwapPlan(walletAddress, turn.trade);
+  }
+
+  const profileBefore = upsertGameProfile(db, walletAddress);
+  const nextEnergy = Math.max(0, Math.min(100, Number(profileBefore.energy) + (turn.requiresTrade ? -8 : 3)));
+  const nextStreak = Number(profileBefore.streak) + 1;
+  const profileAfter = upsertGameProfile(db, walletAddress, {
+    archetype: turn.archetype,
+    streak: nextStreak,
+    energy: nextEnergy,
+  });
+
+  saveMemory(db, walletAddress, "assistant", `GAME_TURN ${JSON.stringify(turn)}`);
+  saveGameAction(db, walletAddress, {
+    symbioteMint: user.symbiote_mint,
+    gameName: turn.gameName,
+    objective: turn.objective,
+    moveText: turn.moveText,
+    outcomeText: turn.outcomeText,
+    txBase64: swapPlan?.swapTransactionBase64 || null,
+  });
+
+  return {
+    walletAddress,
+    symbioteMint: user.symbiote_mint,
+    turn,
+    gameProfile: profileAfter,
+    readyToSignSwapTransaction: swapPlan?.swapTransactionBase64 || null,
+    jupiterQuote: swapPlan?.quote || null,
+    referralFeeAccount: JUPITER_REFERRAL_FEE_ACCOUNT || null,
+  };
+}
+
+function configureAutoPlay(walletAddress) {
+  const current = activeGameLoops.get(walletAddress);
+  if (current) {
+    clearInterval(current.intervalId);
+    activeGameLoops.delete(walletAddress);
+  }
+
+  const profile = getGameProfile(db, walletAddress);
+  if (!profile || Number(profile.auto_play) !== 1) return;
+
+  const intervalMs = Math.max(60, Number(profile.tick_interval_sec || DEFAULT_GAME_TICK_SEC)) * 1000;
+  const intervalId = setInterval(() => {
+    runGameTurn(walletAddress, false).catch((error) => {
+      console.error("auto play turn failed", walletAddress, error.message);
+    });
+  }, intervalMs);
+
+  activeGameLoops.set(walletAddress, { intervalId, intervalMs });
 }
 
 async function inferPostTradePersonality(walletAddress, tradeVolumeUsd, currentPersonality) {

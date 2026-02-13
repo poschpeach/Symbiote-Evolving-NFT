@@ -4,22 +4,28 @@ const connectBtn = document.getElementById("connectBtn");
 const mintBtn = document.getElementById("mintBtn");
 const suggestBtn = document.getElementById("suggestBtn");
 const executeBtn = document.getElementById("executeBtn");
+const playTurnBtn = document.getElementById("playTurnBtn");
+const autoPlayBtn = document.getElementById("autoPlayBtn");
 const backendUrlInput = document.getElementById("backendUrl");
 const walletOut = document.getElementById("walletOut");
 const symbioteOut = document.getElementById("symbioteOut");
 const aiOut = document.getElementById("aiOut");
 const execOut = document.getElementById("execOut");
+const gameOut = document.getElementById("gameOut");
 
 let walletAddress = null;
 let authToken = null;
 let symbioteMint = null;
 let pendingSwapBase64 = null;
 let refreshTimer = null;
+let autoPlayEnabled = false;
 
 connectBtn.addEventListener("click", connectWallet);
 mintBtn.addEventListener("click", mintSymbiote);
 suggestBtn.addEventListener("click", suggestTrade);
 executeBtn.addEventListener("click", executeTrade);
+playTurnBtn.addEventListener("click", playTurn);
+autoPlayBtn.addEventListener("click", toggleAutoPlay);
 
 async function connectWallet() {
   try {
@@ -47,6 +53,8 @@ async function connectWallet() {
 
     mintBtn.disabled = false;
     suggestBtn.disabled = false;
+    playTurnBtn.disabled = false;
+    autoPlayBtn.disabled = false;
   } catch (error) {
     execOut.textContent = `Connect/auth failed: ${error.message}`;
   }
@@ -95,6 +103,37 @@ async function executeTrade() {
   }
 }
 
+async function playTurn() {
+  try {
+    ensureWallet();
+    const response = await post("/agent/play-turn", { walletAddress });
+    gameOut.textContent = JSON.stringify(response, null, 2);
+    if (response.readyToSignSwapTransaction) {
+      pendingSwapBase64 = response.readyToSignSwapTransaction;
+      executeBtn.disabled = false;
+    }
+  } catch (error) {
+    gameOut.textContent = `Play turn failed: ${error.message}`;
+  }
+}
+
+async function toggleAutoPlay() {
+  try {
+    ensureWallet();
+    autoPlayEnabled = !autoPlayEnabled;
+    const response = await post("/agent/auto-play", {
+      walletAddress,
+      enabled: autoPlayEnabled,
+      intervalSec: 180,
+    });
+    gameOut.textContent = JSON.stringify(response, null, 2);
+    autoPlayBtn.textContent = autoPlayEnabled ? "6. Disable Auto Play" : "6. Toggle Auto Play";
+  } catch (error) {
+    autoPlayEnabled = !autoPlayEnabled;
+    gameOut.textContent = `Auto play toggle failed: ${error.message}`;
+  }
+}
+
 function getPhantomProvider() {
   const provider = window.phantom?.solana;
   if (!provider?.isPhantom) throw new Error("Phantom wallet not found.");
@@ -119,6 +158,10 @@ async function refreshSymbioteState() {
   if (!symbioteMint) return;
   const state = await get(`/symbiote/${symbioteMint}`);
   symbioteOut.textContent = JSON.stringify(state, null, 2);
+  if (walletAddress) {
+    const gameState = await get(`/agent/state/${walletAddress}`);
+    gameOut.textContent = JSON.stringify(gameState, null, 2);
+  }
 }
 
 function base64ToBytes(base64) {

@@ -21,6 +21,17 @@ Express + Solana WebSocket listener + OpenAI inference + Jupiter swap builder.
   - requires bearer auth
   - body: `{ "walletAddress": "..." }`
   - returns AI profile, personality reaction, and Jupiter `readyToSignSwapTransaction`
+- `POST /agent/play-turn`
+  - requires bearer auth
+  - body: `{ "walletAddress": "..." }`
+  - executes one autonomous game turn and may return a ready-to-sign swap tx
+- `GET /agent/state/:walletAddress`
+  - requires bearer auth
+  - returns game profile + recent game actions + symbiote state
+- `POST /agent/auto-play`
+  - requires bearer auth
+  - body: `{ "walletAddress": "...", "enabled": true|false, "intervalSec": 180 }`
+  - toggles autonomous periodic game turns
 - `POST /confirm-trade`
   - requires bearer auth
   - body: `{ "walletAddress": "...", "signature": "..." }`
