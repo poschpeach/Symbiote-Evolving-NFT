@@ -1,0 +1,21 @@
+ts_ms,slot,price,hf,action,sold_sol,repaid_usdc,tx_id,proof,reason
+1770906620192,1,210.0000,1.412308,hold,0.000000,0.0000,none,proof-0x101ffc89a8fac6ee,health factor above danger threshold
+1770906620897,2,208.0000,1.399846,hold,0.000000,0.0000,none,proof-0xe8f1dde4a82ea5e7,health factor above danger threshold
+1770906621601,3,204.0000,1.374923,hold,0.000000,0.0000,none,proof-0x2ef8015307be8747,health factor above danger threshold
+1770906622306,4,198.0000,1.337538,hold,0.000000,0.0000,none,proof-0xb442eac2251c2bb5,health factor above danger threshold
+1770906623011,5,194.0000,1.312615,hold,0.000000,0.0000,none,proof-0x5030e6df3a089a6c,health factor above danger threshold
+1770906623717,6,191.0000,1.293923,hold,0.000000,0.0000,none,proof-0x52df67519848e34a,health factor above danger threshold
+1770906624423,7,189.0000,1.281462,hold,0.000000,0.0000,none,proof-0x3bd4b58db261441,health factor above danger threshold
+1770906625129,8,193.0000,1.306385,hold,0.000000,0.0000,none,proof-0x8cda3f898ee1a0bf,health factor above danger threshold
+1770906625832,9,197.0000,1.331308,hold,0.000000,0.0000,none,proof-0xe00d22eab50239b2,health factor above danger threshold
+1770906626534,10,200.0000,1.350000,hold,0.000000,0.0000,none,proof-0x451fa38f653e6843,health factor above danger threshold
+1770906645279,1,210.0000,1.112727,hold,0.000000,0.0000,none,proof-0xb9296efe912ffbd1,health factor above danger threshold
+1770906645985,2,208.0000,1.102909,hold,0.000000,0.0000,none,proof-0x2dafbefaf075f6d1,health factor above danger threshold
+1770906646689,3,204.0000,1.083273,hold,0.000000,0.0000,none,proof-0x1825e53211b33c07,health factor above danger threshold
+1770906647394,4,198.0000,1.053818,partial_unwind,2.631547,517.9200,tx-0x177987db927f86e7,proof-0x44723d79d0e7e4c,hf 1.0538 < 1.08; urgency=warning; sell 2.6315 SOL to repay 517.92 USDC
+1770906648100,5,194.0000,1.061555,hold,0.000000,0.0000,none,proof-0x92b3d2086cd6b429,cooldown active; previous unwind recently executed
+1770906648805,6,191.0000,1.046640,hold,0.000000,0.0000,none,proof-0x45ecc5b366e5c3b0,cooldown active; previous unwind recently executed
+1770906649511,7,189.0000,1.036697,partial_unwind,2.527019,474.7409,tx-0x6b3744bb5a711922,proof-0x96bd6220e3b9ac4b,hf 1.0367 < 1.08; urgency=warning; sell 2.5270 SOL to repay 474.74 USDC
+1770906650216,8,193.0000,1.083741,hold,0.000000,0.0000,none,proof-0x3c7220d22d1c45b9,health factor above danger threshold
+1770906650921,9,197.0000,1.103776,hold,0.000000,0.0000,none,proof-0x42c01aa4f97f1402,health factor above danger threshold
+1770906651627,10,200.0000,1.118803,hold,0.000000,0.0000,none,proof-0xa86efdde831078d7,health factor above danger threshold

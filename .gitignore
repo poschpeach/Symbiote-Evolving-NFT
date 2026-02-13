@@ -1,0 +1,9 @@
+/target
+/backend/.env
+/backend/symbiote.db
+/backend/node_modules
+/backend/keypairs
+/frontend/node_modules
+/symbiote-anchor/node_modules
+/.logs
+/backend/logs

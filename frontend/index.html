@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Symbiote Control Panel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+    <script src="https://unpkg.com/@solana/web3.js@1.98.0/lib/index.iife.min.js"></script>
+  </head>
+  <body>
+    <main class="shell">
+      <section class="panel">
+        <h1>Symbiote Pet Dynamic Evolutionary NFT</h1>
+        <p class="sub">Connect wallet, mint symbiote, get AI trade advice, execute Jupiter route, evolve NFT.</p>
+
+        <label for="backendUrl">Backend URL</label>
+        <input id="backendUrl" type="text" value="http://localhost:3000" />
+
+        <div class="actions">
+          <button id="connectBtn">1. Connect Phantom</button>
+          <button id="mintBtn" disabled>2. Mint Symbiote</button>
+          <button id="suggestBtn" disabled>3. Suggest Trade</button>
+          <button id="executeBtn" disabled>4. Sign + Execute Swap</button>
+        </div>
+
+        <div class="grid">
+          <article>
+            <h2>Wallet</h2>
+            <pre id="walletOut">Not connected.</pre>
+          </article>
+          <article>
+            <h2>Symbiote</h2>
+            <pre id="symbioteOut">No mint yet.</pre>
+          </article>
+          <article>
+            <h2>AI Output</h2>
+            <pre id="aiOut">No recommendation yet.</pre>
+          </article>
+          <article>
+            <h2>Execution</h2>
+            <pre id="execOut">No swap executed yet.</pre>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

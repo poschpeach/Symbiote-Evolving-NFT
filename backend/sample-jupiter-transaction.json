@@ -1,0 +1,39 @@
+{
+  "walletAddress": "7A9xZ6m5o8xV9ZgDfL1P8qYvX4jW5EoP8M5S6aKj1ZyQ",
+  "recommendation": {
+    "text": "You are overexposed to meme coins, rotate 0.25 SOL to USDC.",
+    "input_mint": "So11111111111111111111111111111111111111112",
+    "output_mint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+    "amount_lamports_or_units": "250000000"
+  },
+  "jupiterQuote": {
+    "inputMint": "So11111111111111111111111111111111111111112",
+    "inAmount": "250000000",
+    "outputMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+    "outAmount": "35315000",
+    "otherAmountThreshold": "35138425",
+    "swapMode": "ExactIn",
+    "slippageBps": 50,
+    "platformFee": {
+      "amount": "17657",
+      "feeBps": 50
+    },
+    "routePlan": [
+      {
+        "swapInfo": {
+          "ammKey": "5BKxfWMbmYBAEWvyPZS9esPducUba9GqyMjtLCfbaqyF",
+          "label": "Meteora DLMM",
+          "inputMint": "So11111111111111111111111111111111111111112",
+          "outputMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+          "inAmount": "250000000",
+          "outAmount": "35315000",
+          "feeAmount": "5000",
+          "feeMint": "So11111111111111111111111111111111111111112"
+        },
+        "percent": 100
+      }
+    ]
+  },
+  "readyToSignSwapTransaction": "AQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABAAED...base64-serialized-versioned-transaction...",
+  "referralFeeAccount": "YOUR_REFERRAL_TOKEN_ACCOUNT"
+}

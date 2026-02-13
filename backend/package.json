@@ -1,0 +1,26 @@
+{
+  "name": "symbiote-backend",
+  "version": "1.0.0",
+  "description": "Symbiote AI backend for Solana NFT evolution and Jupiter routing",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "validate:env": "node scripts/validate-env.mjs",
+    "smoke": "node scripts/smoke-test.mjs",
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.30.1",
+    "@solana/spl-token": "^0.4.8",
+    "@solana/web3.js": "^1.98.0",
+    "better-sqlite3": "^11.8.1",
+    "bs58": "^6.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express-rate-limit": "^7.5.0",
+    "express": "^4.21.2",
+    "openai": "^4.86.1",
+    "tweetnacl": "^1.0.3"
+  }
+}

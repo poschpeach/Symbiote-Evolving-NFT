@@ -1,0 +1,106 @@
+{
+  "address": "Fg6PaFpoGXkYsidMpWxTWqkZq5Q8x8M9KXQvS6kR7d5k",
+  "metadata": {
+    "name": "symbiote_pet",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Symbiote Pet Dynamic Evolutionary NFT"
+  },
+  "instructions": [
+    {
+      "name": "mintSymbiote",
+      "discriminator": [86, 234, 87, 29, 252, 154, 239, 141],
+      "accounts": [
+        { "name": "payer", "writable": true, "signer": true },
+        { "name": "owner" },
+        { "name": "mint", "writable": true, "signer": true },
+        { "name": "symbioteState", "writable": true },
+        { "name": "ownerAta", "writable": true },
+        { "name": "metadata", "writable": true },
+        { "name": "masterEdition", "writable": true },
+        { "name": "tokenMetadataProgram" },
+        { "name": "tokenProgram" },
+        { "name": "associatedTokenProgram" },
+        { "name": "systemProgram" },
+        { "name": "rent" }
+      ],
+      "args": [{ "name": "owner", "type": "pubkey" }]
+    },
+    {
+      "name": "evolveSymbiote",
+      "discriminator": [205, 248, 91, 46, 223, 169, 165, 48],
+      "accounts": [
+        { "name": "authority", "signer": true },
+        { "name": "symbioteState", "writable": true },
+        { "name": "metadata", "writable": true },
+        { "name": "tokenMetadataProgram" }
+      ],
+      "args": [
+        { "name": "nftAccount", "type": "pubkey" },
+        { "name": "newStats", "type": { "defined": { "name": "stats" } } }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "symbioteState",
+      "discriminator": [18, 253, 48, 192, 114, 110, 193, 170]
+    }
+  ],
+  "types": [
+    {
+      "name": "stats",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "level", "type": "u16" },
+          { "name": "xp", "type": "u64" },
+          { "name": "personalityString", "type": "string" }
+        ]
+      }
+    },
+    {
+      "name": "symbioteState",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          { "name": "bump", "type": "u8" },
+          { "name": "owner", "type": "pubkey" },
+          { "name": "evolutionAuthority", "type": "pubkey" },
+          { "name": "mint", "type": "pubkey" },
+          { "name": "level", "type": "u16" },
+          { "name": "xp", "type": "u64" },
+          { "name": "personality", "type": "string" },
+          { "name": "uri", "type": "string" }
+        ]
+      }
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "ownerPubkeyMismatch",
+      "msg": "Provided owner pubkey does not match owner account."
+    },
+    {
+      "code": 6001,
+      "name": "nftMintMismatch",
+      "msg": "NFT account/mint mismatch."
+    },
+    {
+      "code": 6002,
+      "name": "unauthorizedEvolutionAuthority",
+      "msg": "Only the configured evolution authority can evolve the Symbiote."
+    },
+    {
+      "code": 6003,
+      "name": "personalityTooLong",
+      "msg": "Personality string exceeds max length."
+    },
+    {
+      "code": 6004,
+      "name": "invalidMetadataPda",
+      "msg": "Metadata account does not match the expected PDA."
+    }
+  ]
+}
