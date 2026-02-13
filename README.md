@@ -24,7 +24,9 @@ The result is a programmable “pet strategist” that behaves like a game chara
 1. Configure backend environment:
 
 ```bash
-cd /Users/hurricanexbt/Documents/New\ project/backend
+# Clone and enter project
+git clone https://github.com/poschpeach/Symbiote-Evolving-NFT symbiote
+cd symbiote/backend
 cp .env.example .env
 npm install
 npm run validate:env
@@ -33,7 +35,7 @@ npm run validate:env
 2. Launch backend + frontend:
 
 ```bash
-cd /Users/hurricanexbt/Documents/New\ project
+cd ../ # back to project root
 ./scripts/dev-up.sh
 ```
 

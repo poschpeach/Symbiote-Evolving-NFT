@@ -64,7 +64,8 @@ Key file:
 ## 2) Local Start
 
 ```bash
-cd /Users/hurricanexbt/Documents/New\ project
+# From project root
+cd symbiote
 ./scripts/dev-up.sh
 ```
 

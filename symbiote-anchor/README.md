@@ -3,14 +3,16 @@
 ## Build
 
 ```bash
-cd /Users/hurricanexbt/Documents/New\ project/symbiote-anchor
+# from root/symbiote-anchor
+cd symbiote-anchor
 anchor build
 ```
 
 ## Test (local validator)
 
 ```bash
-cd /Users/hurricanexbt/Documents/New\ project/symbiote-anchor
+# from root/symbiote-anchor
+cd symbiote-anchor
 yarn
 anchor test
 ```
@@ -18,7 +20,8 @@ anchor test
 ## Deploy (dev pipeline)
 
 ```bash
-cd /Users/hurricanexbt/Documents/New\ project/symbiote-anchor
+# from root/symbiote-anchor
+cd symbiote-anchor
 ./scripts/deploy-dev.sh
 ```
 

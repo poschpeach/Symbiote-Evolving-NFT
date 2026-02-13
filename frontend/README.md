@@ -5,7 +5,8 @@
 1. Start backend:
 
 ```bash
-cd /Users/hurricanexbt/Documents/New\ project/backend
+# from project root
+cd backend
 npm install
 npm run start
 ```
@@ -13,7 +14,7 @@ npm run start
 2. Serve frontend as static files:
 
 ```bash
-cd /Users/hurricanexbt/Documents/New\ project
+# from project root
 python3 -m http.server 5173 --directory frontend
 ```
 
@@ -24,7 +25,7 @@ python3 -m http.server 5173 --directory frontend
 Or run both backend + frontend from workspace root:
 
 ```bash
-cd /Users/hurricanexbt/Documents/New\ project
+# from project root
 ./scripts/preflight.sh
 ./scripts/dev-up.sh
 ```
