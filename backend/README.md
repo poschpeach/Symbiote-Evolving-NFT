@@ -25,13 +25,24 @@ Express + Solana WebSocket listener + OpenAI inference + Jupiter swap builder.
   - requires bearer auth
   - body: `{ "walletAddress": "..." }`
   - executes one autonomous game turn and may return a ready-to-sign swap tx
+- `POST /agent/next-actions`
+  - requires bearer auth
+  - body: `{ "walletAddress": "..." }`
+  - returns multi-domain autonomous action plan (portfolio/yield/governance/game/social/trade)
 - `GET /agent/state/:walletAddress`
   - requires bearer auth
   - returns game profile + recent game actions + symbiote state
+- `GET /agent/dashboard/:walletAddress`
+  - requires bearer auth
+  - unified snapshot: symbiote state, missions, actions, recent trades/suggestions
 - `POST /agent/auto-play`
   - requires bearer auth
   - body: `{ "walletAddress": "...", "enabled": true|false, "intervalSec": 180 }`
   - toggles autonomous periodic game turns
+- `POST /agent/create-mission`
+  - requires bearer auth
+  - body: `{ "walletAddress": "...", "missionType": "yield|governance|xp|risk|custom", "objective": "...", "targetValue": "optional" }`
+  - creates persistent mission that the agent plans around
 - `POST /confirm-trade`
   - requires bearer auth
   - body: `{ "walletAddress": "...", "signature": "..." }`

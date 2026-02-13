@@ -4,6 +4,7 @@ Autonomous Solana NFT game agent that:
 - mints a mutable Metaplex NFT,
 - learns wallet behavior from on-chain activity,
 - plays agentic strategy turns for the user (manual + auto-play),
+- plans multi-domain autonomous actions (portfolio, yield, governance, game missions),
 - suggests Jupiter swaps with referral fee routing,
 - and evolves NFT state (Level / XP / Personality) after executed trades.
 

@@ -26,8 +26,11 @@ Key file:
   - `/connect-wallet`
 - Agentic game loop:
   - `/agent/play-turn`
+  - `/agent/next-actions`
   - `/agent/state/:walletAddress`
+  - `/agent/dashboard/:walletAddress`
   - `/agent/auto-play`
+  - `/agent/create-mission`
 - Mint:
   - `/mint-symbiote`
 - AI + Jupiter planning:

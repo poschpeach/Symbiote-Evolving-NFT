@@ -6,6 +6,8 @@ const suggestBtn = document.getElementById("suggestBtn");
 const executeBtn = document.getElementById("executeBtn");
 const playTurnBtn = document.getElementById("playTurnBtn");
 const autoPlayBtn = document.getElementById("autoPlayBtn");
+const nextActionsBtn = document.getElementById("nextActionsBtn");
+const dashboardBtn = document.getElementById("dashboardBtn");
 const backendUrlInput = document.getElementById("backendUrl");
 const walletOut = document.getElementById("walletOut");
 const symbioteOut = document.getElementById("symbioteOut");
@@ -26,6 +28,8 @@ suggestBtn.addEventListener("click", suggestTrade);
 executeBtn.addEventListener("click", executeTrade);
 playTurnBtn.addEventListener("click", playTurn);
 autoPlayBtn.addEventListener("click", toggleAutoPlay);
+nextActionsBtn.addEventListener("click", loadNextActions);
+dashboardBtn.addEventListener("click", loadDashboard);
 
 async function connectWallet() {
   try {
@@ -55,6 +59,8 @@ async function connectWallet() {
     suggestBtn.disabled = false;
     playTurnBtn.disabled = false;
     autoPlayBtn.disabled = false;
+    nextActionsBtn.disabled = false;
+    dashboardBtn.disabled = false;
   } catch (error) {
     execOut.textContent = `Connect/auth failed: ${error.message}`;
   }
@@ -131,6 +137,26 @@ async function toggleAutoPlay() {
   } catch (error) {
     autoPlayEnabled = !autoPlayEnabled;
     gameOut.textContent = `Auto play toggle failed: ${error.message}`;
+  }
+}
+
+async function loadNextActions() {
+  try {
+    ensureWallet();
+    const response = await post("/agent/next-actions", { walletAddress });
+    aiOut.textContent = JSON.stringify(response, null, 2);
+  } catch (error) {
+    aiOut.textContent = `Next actions failed: ${error.message}`;
+  }
+}
+
+async function loadDashboard() {
+  try {
+    ensureWallet();
+    const response = await get(`/agent/dashboard/${walletAddress}`);
+    gameOut.textContent = JSON.stringify(response, null, 2);
+  } catch (error) {
+    gameOut.textContent = `Dashboard failed: ${error.message}`;
   }
 }
 

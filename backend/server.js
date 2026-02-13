@@ -361,6 +361,90 @@ app.post("/agent/auto-play", requireSession, async (req, res) => {
   }
 });
 
+app.post("/agent/create-mission", requireSession, async (req, res) => {
+  try {
+    const { walletAddress, missionType, objective, targetValue } = req.body;
+    if (!walletAddress || !missionType || !objective) {
+      return res.status(400).json({ error: "walletAddress, missionType, and objective are required." });
+    }
+    requireWalletMatch(req.auth.walletAddress, walletAddress);
+
+    const mission = createMission(db, walletAddress, {
+      missionType,
+      objective,
+      targetValue: targetValue ?? null,
+    });
+    res.json({ created: true, mission });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post("/agent/next-actions", requireSession, async (req, res) => {
+  try {
+    const { walletAddress } = req.body;
+    if (!walletAddress) return res.status(400).json({ error: "walletAddress is required" });
+    requireWalletMatch(req.auth.walletAddress, walletAddress);
+
+    const user = getUser(db, walletAddress);
+    const symbiote = user?.symbiote_mint ? await fetchSymbioteState(user.symbiote_mint) : null;
+    const profile = upsertGameProfile(db, walletAddress);
+    const history = await fetchTradeHistory(walletAddress, 25);
+    const memory = getMemory(db, walletAddress, 25);
+    const missions = getMissions(db, walletAddress, "active");
+    const lastTrades = getRecentTrades(db, walletAddress, 10);
+
+    const actions = await inferNextActions({
+      walletAddress,
+      symbiote,
+      profile,
+      history,
+      memory,
+      missions,
+      lastTrades,
+    });
+
+    saveMemory(db, walletAddress, "assistant", `NEXT_ACTIONS ${JSON.stringify(actions)}`);
+    res.json({
+      walletAddress,
+      symbioteMint: user?.symbiote_mint || null,
+      actions,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.get("/agent/dashboard/:walletAddress", requireSession, async (req, res) => {
+  try {
+    const walletAddress = req.params.walletAddress;
+    requireWalletMatch(req.auth.walletAddress, walletAddress);
+
+    const user = getUser(db, walletAddress);
+    const symbiote = user?.symbiote_mint ? await fetchSymbioteState(user.symbiote_mint) : null;
+    const profile = upsertGameProfile(db, walletAddress);
+    const activeMissions = getMissions(db, walletAddress, "active");
+    const completedMissions = getMissions(db, walletAddress, "completed", 10);
+    const recentActions = getRecentGameActions(db, walletAddress, 20);
+    const recentTrades = getRecentTrades(db, walletAddress, 10);
+    const recentSuggestions = getRecentSuggestions(db, walletAddress, 10);
+
+    res.json({
+      walletAddress,
+      symbiote,
+      gameProfile: profile,
+      activeMissions,
+      completedMissions,
+      recentActions,
+      recentTrades,
+      recentSuggestions,
+      autoPlayActive: activeGameLoops.has(walletAddress),
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 app.post("/confirm-trade", requireSession, async (req, res) => {
   try {
     const { walletAddress, signature } = req.body;
@@ -509,6 +593,17 @@ function initDb(database) {
       tx_base64 TEXT,
       created_at TEXT DEFAULT CURRENT_TIMESTAMP
     );
+
+    CREATE TABLE IF NOT EXISTS missions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      wallet_address TEXT NOT NULL,
+      mission_type TEXT NOT NULL,
+      objective TEXT NOT NULL,
+      target_value TEXT,
+      status TEXT NOT NULL DEFAULT 'active',
+      created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+      completed_at TEXT
+    );
   `);
 }
 
@@ -634,6 +729,18 @@ function saveTrade(database, walletAddress, signature, volumeUsd, personality) {
     .run(walletAddress, signature, volumeUsd, personality);
 }
 
+function getRecentTrades(database, walletAddress, limit = 20) {
+  return database
+    .prepare(`SELECT * FROM trades WHERE wallet_address = ? ORDER BY id DESC LIMIT ?`)
+    .all(walletAddress, limit);
+}
+
+function getRecentSuggestions(database, walletAddress, limit = 20) {
+  return database
+    .prepare(`SELECT * FROM suggestions WHERE wallet_address = ? ORDER BY id DESC LIMIT ?`)
+    .all(walletAddress, limit);
+}
+
 function getGameProfile(database, walletAddress) {
   return database.prepare(`SELECT * FROM game_profiles WHERE wallet_address = ?`).get(walletAddress);
 }
@@ -694,6 +801,29 @@ function getRecentGameActions(database, walletAddress, limit = 20) {
   return database
     .prepare(`SELECT * FROM game_actions WHERE wallet_address = ? ORDER BY id DESC LIMIT ?`)
     .all(walletAddress, limit);
+}
+
+function createMission(database, walletAddress, mission) {
+  database
+    .prepare(
+      `INSERT INTO missions (wallet_address, mission_type, objective, target_value, status)
+       VALUES (?, ?, ?, ?, 'active')`
+    )
+    .run(walletAddress, mission.missionType, mission.objective, mission.targetValue);
+
+  return database
+    .prepare(`SELECT * FROM missions WHERE wallet_address = ? ORDER BY id DESC LIMIT 1`)
+    .get(walletAddress);
+}
+
+function getMissions(database, walletAddress, status = "active", limit = 50) {
+  return database
+    .prepare(
+      `SELECT * FROM missions
+       WHERE wallet_address = ? AND status = ?
+       ORDER BY id DESC LIMIT ?`
+    )
+    .all(walletAddress, status, limit);
 }
 
 function subscribeWallet(walletPk) {
@@ -831,6 +961,64 @@ Use USDC mint ${USDC_MINT}
       output_mint: parsed.trade?.output_mint || USDC_MINT,
       amount_lamports_or_units: String(parsed.trade?.amount_lamports_or_units || "10000000"),
     },
+  };
+}
+
+async function inferNextActions(context) {
+  const systemPrompt = `
+You are the strategic brain of an autonomous Solana companion.
+Return strict JSON:
+{
+  "persona": "string",
+  "priority": "Safety|Growth|Aggression|Recovery",
+  "actions": [
+    {
+      "category": "portfolio|yield|governance|game|social|trade",
+      "title": "string",
+      "reason": "string",
+      "risk": "Low|Medium|High",
+      "requires_signature": true|false,
+      "trade": {
+        "input_mint": "optional mint",
+        "output_mint": "optional mint",
+        "amount_lamports_or_units": "optional integer string"
+      }
+    }
+  ]
+}
+Use SOL mint ${SOL_MINT}
+Use USDC mint ${USDC_MINT}
+Keep actions realistic for an on-chain user.
+`;
+
+  const response = await openai.responses.create({
+    model: OPENAI_MODEL,
+    input: [
+      { role: "system", content: systemPrompt },
+      { role: "user", content: JSON.stringify(context) },
+    ],
+    temperature: 0.55,
+  });
+
+  const parsed = safeJsonParse(response.output_text || "{}");
+  const actions = Array.isArray(parsed.actions) ? parsed.actions : [];
+  return {
+    persona: parsed.persona || "Adaptive Strategist",
+    priority: parsed.priority || "Growth",
+    actions: actions.slice(0, 6).map((a) => ({
+      category: a.category || "game",
+      title: a.title || "Scout next move",
+      reason: a.reason || "Maintain initiative with controlled risk.",
+      risk: a.risk || "Medium",
+      requires_signature: Boolean(a.requires_signature),
+      trade: a.trade
+        ? {
+            input_mint: a.trade.input_mint || SOL_MINT,
+            output_mint: a.trade.output_mint || USDC_MINT,
+            amount_lamports_or_units: String(a.trade.amount_lamports_or_units || "10000000"),
+          }
+        : null,
+    })),
   };
 }
 
